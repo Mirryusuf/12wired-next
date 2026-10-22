@@ -99,16 +99,17 @@ export default function SiteHeader() {
         position:fixed resolve against *that element* instead of the viewport.
         Nested inside, this overlay was clipped to the 80px header bar.
 
-        It also scrolls, with a min-h-full inner column, so the links centre
-        when there is room and scroll when there isn't — short landscape
-        viewports otherwise push HOME and ARTISTS off the top.
+        The column starts at the top rather than centring: on a tall phone a
+        centred block just floats in the middle with dead space above and
+        below. min-h-full plus overflow-y-auto still lets it scroll on short
+        landscape viewports, which otherwise push HOME and ARTISTS off-screen.
       */}
       <div
         className={`fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-ink transition-opacity duration-300 md:hidden ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        <div className="flex min-h-full flex-col justify-center gap-1 px-5 pb-12 pt-24">
+        <div className="flex min-h-full flex-col justify-start gap-1 px-5 pb-12 pt-24">
         {nav.map((item, i) => (
           <Link
             key={item.label}
