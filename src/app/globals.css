@@ -1,0 +1,502 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #242827;
+  --color-ink-soft: #2e3332;
+  --color-cream: #f0e9e3;
+  --color-sand: #dcd6c8;
+  --color-flame: #e05b46;
+
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-marquee: marquee 28s linear infinite;
+  --animate-marquee-slow: marquee 48s linear infinite;
+
+  --animate-hero-zoom: hero-zoom 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  --animate-fade-up: fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.8s ease-out both;
+  --animate-page-in: fade-in 0.5s ease-out both;
+  --animate-slide-down: slide-down 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Hero background settles from a slight overscale on first paint. */
+@keyframes hero-zoom {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Intro overlay --------------------------------------------------- */
+
+/* Swings in from behind, settling face-on. */
+@keyframes intro-spin {
+  0% {
+    transform: rotateY(-210deg) rotateX(10deg) scale(0.55);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    /* Settles on a slight X tilt, never dead-on — that permanent tilt is what
+       keeps the extruded body visible while the logo is at rest. */
+    transform: rotateY(0deg) rotateX(10deg) scale(1);
+    opacity: 1;
+  }
+}
+
+
+/*
+ * Specular band running across the letters on a loop, independent of the
+ * cursor. With background-size 220% the band centre sits at
+ * 1.1 - 1.2*(position/100) of the logo width, so 142% parks it just off the
+ * left edge and -42% just off the right — a full pass, with both ends
+ * off-stage so the wrap is invisible.
+ */
+@keyframes intro-shine {
+  from {
+    background-position: 142% 0;
+  }
+  to {
+    background-position: -42% 0;
+  }
+}
+
+@keyframes intro-glow {
+  0%,
+  100% {
+    opacity: 0.14;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.22;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes intro-out {
+  to {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-cream);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-flame);
+    color: var(--color-cream);
+  }
+
+  /*
+   * Scroll-reveal. `<Reveal>` stamps data-reveal="<variant>" on mount and adds
+   * data-visible once the element enters the viewport; everything below is the
+   * from/to pair for each variant. Transitions live on the element itself so a
+   * per-element transition-delay can stagger siblings.
+   */
+  [data-reveal] {
+    transition-property: opacity, transform, clip-path;
+    transition-duration: 0.8s;
+    transition-timing-function: var(--ease-out-expo);
+  }
+
+  [data-reveal="up"]:not([data-visible]) {
+    opacity: 0;
+    transform: translateY(2.25rem);
+  }
+
+  [data-reveal="fade"]:not([data-visible]) {
+    opacity: 0;
+  }
+
+  [data-reveal="scale"]:not([data-visible]) {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  [data-reveal="left"]:not([data-visible]) {
+    opacity: 0;
+    transform: translateX(-2.5rem);
+  }
+
+  [data-reveal="right"]:not([data-visible]) {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+
+  /* Wipes upward — reads well on the big display headings. */
+  [data-reveal="clip"] {
+    clip-path: inset(0 0 0 0);
+  }
+
+  [data-reveal="clip"]:not([data-visible]) {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(0.75rem);
+  }
+
+  [data-reveal][data-visible] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer components {
+  /* --- Pointer parallax ---------------------------------------------- */
+
+  /* <PointerField> publishes --px/--py; these just lean on it. The two
+     layers move opposite each other, which is what reads as depth. */
+  .hero-par-bg {
+    transform: translate3d(calc(var(--px, 0) * 22px), calc(var(--py, 0) * 14px), 0);
+    transition: transform 0.12s linear;
+  }
+
+  .hero-par-mark {
+    transform: translate3d(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -8px), 0);
+    transition: transform 0.12s linear;
+  }
+
+  /*
+   * A real scroll container, not a transform animation — <Reel> advances
+   * scrollLeft itself, which is what lets touch, trackpad and drag work on
+   * the same strip. Hover/interaction pausing lives in that component.
+   */
+  .reel {
+    overflow-x: auto;
+    /* Keep a horizontal drag from triggering browser back-navigation. */
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    cursor: grab;
+  }
+
+  .reel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .reel.is-dragging {
+    cursor: grabbing;
+  }
+
+  .reel-track {
+    display: flex;
+    width: max-content;
+    /* Stop text/images being selected mid-drag. */
+    user-select: none;
+  }
+
+  /* Cards lean toward the cursor. --tx/--ty are written by <TiltCard>. */
+  .tilt-card {
+    --tx: 0;
+    --ty: 0;
+    transform: perspective(900px) rotateY(calc(var(--tx) * 8deg))
+      rotateX(calc(var(--ty) * -8deg));
+    transition: transform 0.4s var(--ease-out-expo);
+  }
+
+  .tilt-card:hover {
+    /* Snappier while actually tracking the cursor. */
+    transition-duration: 0.1s;
+  }
+
+  /* --- Intro overlay ------------------------------------------------- */
+
+  /*
+   * Hidden by default so returning visitors and crawlers never see it. The
+   * inline boot script in layout.tsx adds .intro-pending to <html> before
+   * first paint when the intro is due, which is what switches it on — doing
+   * it in React instead would flash the home page first.
+   */
+  .intro-root {
+    display: none;
+  }
+
+  html.intro-pending .intro-root {
+    display: flex;
+  }
+
+  html.intro-pending body {
+    overflow: hidden;
+  }
+
+  /*
+   * Freeze the page's own entrance animations while the overlay is up. Without
+   * this the hero zoom, the fade-ups and the marquees all play out behind the
+   * splash and are finished by the time anyone presses Enter. The intro itself
+   * sits outside main/header/footer, so it keeps running.
+   */
+  html.intro-pending main,
+  html.intro-pending main *,
+  html.intro-pending header,
+  html.intro-pending header *,
+  html.intro-pending footer,
+  html.intro-pending footer * {
+    animation-play-state: paused !important;
+  }
+
+  .intro-root.is-leaving {
+    animation: intro-out 0.6s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  .intro-stage {
+    /* Closer camera = stronger foreshortening. 1400px read almost flat. */
+    perspective: 900px;
+    /*
+     * The vanishing point tracks the cursor. This is what actually sells the
+     * 3D: rotating the object alone reads as a rotating picture, but moving
+     * the viewpoint is what your eye reads as walking around a solid thing.
+     */
+    perspective-origin: calc(50% + var(--px, 0) * 18%) calc(50% + var(--py, 0) * 14%);
+  }
+
+  .intro-root {
+    /* Driven every frame by the pointer loop in IntroOverlay.tsx: the cursor
+       offset from centre, -1..1. Defaulting to 0 means no-JS renders straight. */
+    --px: 0;
+    --py: 0;
+  }
+
+  .intro-spin {
+    animation: intro-spin 1.6s var(--ease-out-expo) both;
+    transform-style: preserve-3d;
+  }
+
+  /* The logo leans toward the cursor; the layers below move less and in the
+     opposite direction, which is what sells the depth. */
+  .intro-tilt {
+    transform-style: preserve-3d;
+    will-change: transform;
+    transform: translate3d(calc(var(--px) * 14px), calc(var(--py) * 8px), 0)
+      rotateY(calc(var(--px) * 22deg)) rotateX(calc(var(--py) * -15deg));
+  }
+
+  /* Pushed back in Z so the perspective actually projects it further away,
+     rather than it just sliding around on the same plane as the logo. */
+  .intro-glow-layer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate3d(calc(-50% + var(--px) * -34px), calc(-50% + var(--py) * -20px), -160px);
+  }
+
+  .intro-drift {
+    transform: translate3d(calc(var(--px) * -7px), calc(var(--py) * -4px), 0);
+  }
+
+  .intro-logo {
+    position: relative;
+    width: min(78vw, 720px);
+    transform-style: preserve-3d;
+    /* Depth of one extrusion slice — scales with the viewport so the body
+       stays ~15% of the logo width at every size instead of turning into a
+       brick on phones. 26 slices x 5.4px = ~140px of depth on desktop — the
+       side walls need real thickness to be visible at these angles. */
+    --intro-slice: clamp(2.6px, 0.62vw, 5.4px);
+  }
+
+  .intro-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Darkened silhouettes stacked backwards in Z form the extruded body. */
+  .intro-slab {
+    position: absolute;
+    inset: 0;
+  }
+
+  .intro-shine {
+    position: absolute;
+    inset: 0;
+    transform: translateZ(1px);
+    pointer-events: none;
+    /* Narrow band so it reads as a glint rather than a wash — the old 62%-wide
+       version just looked like the logo briefly going pale. These stops give a
+       band ~20% of the logo width. */
+    background-image: linear-gradient(
+      100deg,
+      transparent 45.5%,
+      rgb(255 255 255 / 0.72) 50%,
+      transparent 54.5%
+    );
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+    /* plus-lighter reads far more like real specular; screen is the fallback. */
+    mix-blend-mode: screen;
+    mix-blend-mode: plus-lighter;
+    /* Runs on its own loop — deliberately NOT tied to the pointer. Resting
+       position is off-stage left, which is also where it sits if the
+       animation is disabled. */
+    background-position: 142% 0;
+    animation: intro-shine 3s linear infinite;
+    /* Confine the highlight to the letterforms via the logo's own alpha. */
+    -webkit-mask-image: url("/images/logo-wordmark.png");
+    mask-image: url("/images/logo-wordmark.png");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  .intro-glow {
+    /* Base opacity matters: without it the bloom renders at full strength
+       whenever the animation isn't running (paused tabs, snapshotting). */
+    opacity: 0.14;
+    animation: intro-glow 5s ease-in-out infinite;
+  }
+
+  /* Flame underline that wipes in from the left on hover/focus. */
+  .nav-link {
+    position: relative;
+  }
+
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.4rem;
+    height: 1px;
+    width: 100%;
+    background-color: var(--color-flame);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s var(--ease-out-expo);
+  }
+
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+}
+
+@utility display-xl {
+  font-size: clamp(2.5rem, 9vw, 7.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+@utility label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/*
+ * prefers-reduced-motion: soften, don't stop.
+ *
+ * The owner's call for this site: the running text, the glint and the hero
+ * settle are the identity of the page, so they keep running — just slower,
+ * with shorter travel, and with the pointer parallax scaled to ~35% in JS
+ * (PointerField / TiltCard / IntroOverlay). That is a defensible reading of
+ * "reduced". Two earlier versions of this block stopped motion outright and
+ * left the site looking dead on machines with the OS setting on.
+ *
+ * To go back to strict behaviour, swap the duration overrides below for
+ * `animation: none !important` and set the JS amplitude to 0.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  /* Loops keep looping, at roughly half speed. */
+  .animate-marquee {
+    animation-duration: 56s !important;
+  }
+
+  .animate-marquee-slow {
+    animation-duration: 96s !important;
+  }
+
+  .intro-shine {
+    animation-duration: 6s !important;
+  }
+
+  /* One-shot entrances get calmer rather than disappearing. */
+  .animate-hero-zoom {
+    animation-duration: 4s !important;
+  }
+
+  .intro-spin {
+    animation-duration: 2.4s !important;
+  }
+
+  /* Reveals still fade in, but travel a fraction of the distance. */
+  [data-reveal="up"]:not([data-visible]) {
+    transform: translateY(0.5rem);
+  }
+
+  [data-reveal="scale"]:not([data-visible]) {
+    transform: scale(0.99);
+  }
+
+  [data-reveal="left"]:not([data-visible]) {
+    transform: translateX(-0.5rem);
+  }
+
+  [data-reveal="right"]:not([data-visible]) {
+    transform: translateX(0.5rem);
+  }
+
+  [data-reveal="clip"]:not([data-visible]) {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
